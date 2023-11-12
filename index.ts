@@ -124,7 +124,7 @@ let storyline = {
     },
     {
       sectionId: 3,
-      title: "Climax - The Hidden Temple",
+      title: "The Hidden Temple",
       description:
         "Reach the hidden temple and face the rival adventurer, Zara.",
       objectives: ["Confront Zara", "Make a moral decision about the Relic"],
@@ -154,37 +154,85 @@ function makeChoice(choice, options) {
 }
 
 function savePreference(preference, sentiment) {
-  console.log(chalk.bgMagenta("SAVING PREFERENCE"), preference, sentiment);
+  console.log(chalk.magenta("SAVING PREFERENCE"), preference, sentiment);
 }
 
 function solveQuery() {
-  console.log(chalk.greenBright("SOLVED!!!!! THE MYSTERY IS SOLVED!!!!"));
+  console.log(rainbowText("S O L V E D  T H E  M Y S T E R Y"));
 }
 
+let stateItems = [];
 function updateGameState(property, value) {
-  console.log(chalk.bgCyan("UPDATING GAME STATE"), property, value);
+  console.log(chalk.cyan("UPDATING GAME STATE"), property, value);
 }
 
 function continueGame(situation) {
-  console.log(chalk.blue("CONTINUING, situation report:", situation));
+  console.log(chalk.blue("SITUATION", situation));
 }
 
 function advanceStory(situation) {
-  currentChapter++;
+  console.log(chalk.blue("ADVANCING STORY"), situation);
+  if (currentChapter !== storyline.sections.length - 1) {
+    currentChapter++;
+  }
+
   if (currentChapter > storyline.sections.length) {
     rainbowText("THE END");
     process.exit();
   }
 }
 
+let metCharacters = [];
 function meetCharacter(name, role, meetingPlace, lastStatement) {
   console.log(
-    chalk.bgRed("MEETING CHARACTER"),
+    chalk.red("MEETING CHARACTER"),
+
+    chalk.blue("name"),
     name,
+    chalk.blue("role"),
     role,
+    chalk.blue("meetingPlace"),
     meetingPlace,
+    chalk.blue("lastStatement"),
     lastStatement
   );
+  metCharacters.push({ name, role, meetingPlace, lastStatement });
+}
+
+let comrades = [];
+function recruitComrades(name, role, meetingPlace, fee, terms) {
+  console.log(
+    chalk.red("RECRUITING COMRADES"),
+
+    chalk.blue("name"),
+    name,
+    chalk.blue("role"),
+    role,
+    chalk.blue("meetingPlace"),
+    meetingPlace,
+    chalk.blue("fee"),
+    fee,
+    chalk.blue("terms"),
+    terms
+  );
+  comrades.push({ name, role, meetingPlace, fee, terms });
+}
+
+function endGame() {
+  console.log(rainbowText("THE END"));
+  process.exit();
+}
+
+function generateSystemPrompt() {
+  return {
+    role: "system",
+    content: `
+    ${systemPromptGameStart}
+    ${currentGameState}
+    ${story}
+    ${behaviour}
+    `,
+  };
 }
 
 const messages = [
@@ -394,8 +442,61 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "recruit_comrades",
+      description:
+        "characters we meet in game can be recruited to join our party of comrades and fellow adventurers. we can pay them a fee to join us. If they agree, to join us they can. But they must agree. We can pay if they negotiate.",
+      parameters: {
+        type: "object",
+        properties: {
+          name: {
+            type: "string",
+            description: "the name of the character joining the party",
+          },
+          role: {
+            type: "string",
+            description: "the role of the character in the party",
+          },
+          meetingPlace: {
+            type: "string",
+            description: "the location of where we met the character",
+          },
+          fee: {
+            type: "string",
+            description: "any fee if negotiated, or 0",
+          },
+          terms: {
+            type: "string",
+            description: "any terms of the agreement to join the party",
+          },
+        },
+      },
+      required: ["name", "role", "meetingPlace"],
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "end_game",
+      description:
+        "if everything is finished we can end the game. But only once the story is completed.",
+      parameters: {
+        type: "object",
+        properties: {
+          report: {
+            type: "string",
+            description:
+              "a final summary of the game state, items we have, and main events that occurred.",
+          },
+        },
+      },
+      required: ["name", "role", "meetingPlace"],
+    },
+  },
 ];
-
+// comrades.push({ name, role, meetingPlace, fee, terms });
 export async function runConversation(prompt: string) {
   // Step 1: send the conversation and available functions to the model
   messages.push({
@@ -440,11 +541,13 @@ export async function runConversation(prompt: string) {
       continue: continueGame,
       advance_story: advanceStory,
       meet_character: meetCharacter,
+      end_game: endGame,
+      recruit_comrades: recruitComrades,
     }; // two functions in this example, but you can have multiple
 
     messages.push(responseMessage); // extend conversation with assistant's reply
 
-    console.log(responseMessage?.tool_calls?.[0]?.function);
+    // console.log(responseMessage?.tool_calls?.[0]?.function);
 
     for (const toolCall of toolCalls) {
       const functionName = toolCall.function.name;
@@ -494,7 +597,9 @@ function promptUser() {
           makeAudio(result[0].message.content, openai);
         }
         console.log(
-          chalk.gray("Story section:"),
+          chalk.gray(
+            `Chapter ${currentChapter + 1}/${storyline.sections.length}: `
+          ),
           storyline.sections[currentChapter].title
         );
 
