@@ -198,7 +198,7 @@ function solveQuery() {
   console.log(rainbowText("S O L V E D  T H E  M Y S T E R Y"));
 }
 
-let stateItems = {};
+let stateItems: Record<string, string> = {};
 function updateGameState(property: string, value: string) {
   stateItems[property] = value;
   console.log(chalk.cyan("UPDATING GAME STATE"), property, value);
@@ -552,7 +552,9 @@ export async function runConversation(prompt: string) {
       ", "
     )} \n\n Characters Met: ${metCharacters
       .join(": ")
-      .toString()} \n\n Not straight away, but as part of the narrative, introduce the puzzle: ${
+      .toString()} \n\n Inventory Items: ${Object.entries(stateItems).join(
+      ", "
+    )} \n\n MAX 30 words reply.  Not straight away, but as part of the narrative, introduce the puzzle: ${
       storyline.sections[currentChapter].puzzle
         ? storyline.sections[currentChapter].puzzle
         : null
