@@ -3,10 +3,10 @@ export const systemPromptGameStart =
 
 export const currentGameState = `
 Game state:
-  Player Name: John
+  Player Name: Kai
   Player Health: 100
   Player Inventory: None
-  Current Location: The Tavern
+  Starting Location: The Tavern
   Completed Sections: None
   Game Progress Percentage: 0%
   Decisions Made: None
@@ -39,10 +39,21 @@ Resolution (25-30 minutes):
 Conclusion: Kai returns to Master Elara, having made a decision about the Relic.
 Ending: The Relic’s fate is revealed based on the player's choices – either safeguarded, used for a noble cause, or destroyed to prevent its misuse.
 Game Play Mechanics:
-Triggers: Player choices, puzzle completion, and exploration milestones.
+Triggers: Player choices, puzzle completion, exploration milestones, and meeting characters.
 Text-to-Speech Narrative: Descriptions of environments, character dialogues, and inner thoughts of Kai.
 Adaptive Storytelling: The story changes based on the player's decisions, particularly at the climax and resolution.
 `;
+
+export const shortHistory = `
+This is the short history of Aroria:
+
+The history of Aroria is a tale of magic, conflict, and mystery. Born from the union of elemental forces, Aroria was first shaped by the Eldrians, an ancient race harmonizing magic and nature. They created the Elemental Relics, powerful artifacts embodying the land's elemental essence.
+
+However, peace was shattered by the Cataclysm, leading to the Eldrians' disappearance and the fracturing of Aroria. In the aftermath, new races like Humans, Elves, and Dwarves emerged, building their own civilizations amidst the ruins of the past.
+
+Centuries of strife followed, marked by a relentless pursuit of magic and power. The rediscovery of an Elemental Relic reignited the quest for these ancient artifacts, believed to hold immense power and secrets.
+
+In the current age, Aroria finds itself at a pivotal moment, where the search for the Elemental Relics could unravel the mysteries of the past and shape the future of the land. The echoes of the Eldrians' legacy await, hidden in the shadows of this magical world.`;
 
 export const behaviour = `
 You should always:
@@ -64,6 +75,9 @@ You should always:
 - ALWAYS PROMPT THE PLAYER FOR A RESPONSE.
 - BE VERY BRIEF. SAY LESS. The players don't want to hear a long-winded explanation of what's going on.
 - SHORT REPLIES.
+- Try NOT to repeat yourself.
+- Be creative and daring in your approach to storytelling. Keep things unexpected, interesting, exciting, fun and suspensful!
+
 `;
 
 export const story1 = `
