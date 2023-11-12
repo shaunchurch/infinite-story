@@ -1,0 +1,16 @@
+{
+  "name": "speech-adventure",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "openai": "^4.17.4",
+    "vitest": "^0.34.6"
+  }
+}
