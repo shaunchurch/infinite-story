@@ -28,6 +28,43 @@ console.log(rainbowText("I N F I N I T E  S T O R Y"));
 console.log(chalk.green("Welcome to the infinite story..."));
 console.log(chalk.green("Shall we begin?"));
 
+interface Message {
+  role: string;
+  content: string;
+  tool_calls?: any[];
+}
+
+function cleanMessages(messages: Message[]): Message[] {
+  return messages.map((message) => {
+    if (!message?.content) return message;
+
+    const promptIndex = message.content.indexOf("Prompt for this chapter:");
+    if (promptIndex !== -1) {
+      return {
+        ...message,
+        content: message.content.slice(0, promptIndex).trim(),
+      };
+    }
+    // console.log("promptIndex", promptIndex);
+    return message;
+  });
+}
+
+function cleanFunctionMessages(messages: Message[]): Message[] {
+  return messages.map((message) => {
+    if (!message?.tool_calls) return message;
+    console.log("mess", message?.tool_calls);
+    let toolStrings = message.tool_calls.map((tool) => {
+      return `${tool.type} : ${tool?.function?.name} : ${Object.entries(
+        JSON.parse(tool?.function?.arguments)
+      ).join(": ")}`;
+    });
+    delete message?.tool_calls;
+    message.content = `${message.content} ${toolStrings.join("\n")}`;
+    return message;
+  });
+}
+
 // Example dummy function hard coded to return the same weather
 // In production, this could be your backend API or an external API
 function getCurrentWeather(location, unit = "fahrenheit") {
@@ -75,7 +112,7 @@ function getLatitude(location) {
   }
 }
 
-let currentStory = story1;
+// let currentStory = story1;
 
 let storyline = {
   title: "The Lost Relic of Aroria",
@@ -161,12 +198,15 @@ function solveQuery() {
   console.log(rainbowText("S O L V E D  T H E  M Y S T E R Y"));
 }
 
-let stateItems = [];
-function updateGameState(property, value) {
+let stateItems = {};
+function updateGameState(property: string, value: string) {
+  stateItems[property] = value;
   console.log(chalk.cyan("UPDATING GAME STATE"), property, value);
 }
 
+let situations = [];
 function continueGame(situation) {
+  situations.push(situation);
   console.log(chalk.blue("SITUATION", situation));
 }
 
@@ -235,7 +275,7 @@ function generateSystemPrompt() {
   };
 }
 
-const messages = [
+let messages: Message[] = [
   {
     role: "system",
     content: `
@@ -243,7 +283,6 @@ const messages = [
     ${currentGameState}
     ${story}
     ${behaviour}
-    ${story1}
     `,
   },
 ];
@@ -499,15 +538,21 @@ const tools = [
 // comrades.push({ name, role, meetingPlace, fee, terms });
 export async function runConversation(prompt: string) {
   // Step 1: send the conversation and available functions to the model
+
+  messages = cleanMessages(messages);
+  // messages = cleanFunctionMessages(messages);
+
   messages.push({
     role: "user",
     content: `${prompt}\n\n Prompt for this chapter: ${
       storyline.sections[currentChapter].gptPrompt
     } \n\n Objectives for this chapter: ${storyline.sections[
       currentChapter
-    ].objectives.join(
-      "\n"
-    )} \n\n Not straight away, but as part of the narrative, introduce the puzzle: ${
+    ].objectives.join("\n")} \n\n Comrades: ${comrades.join(
+      ", "
+    )} \n\n Characters Met: ${metCharacters
+      .join(": ")
+      .toString()} \n\n Not straight away, but as part of the narrative, introduce the puzzle: ${
       storyline.sections[currentChapter].puzzle
         ? storyline.sections[currentChapter].puzzle
         : null
