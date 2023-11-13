@@ -39,7 +39,7 @@ function cleanMessages(messages: Message[]): Message[] {
   return messages.map((message) => {
     if (!message?.content) return message;
 
-    const promptIndex = message.content.indexOf("Prompt for this chapter:");
+    const promptIndex = message.content.indexOf("Story context:");
     if (promptIndex !== -1) {
       return {
         ...message,
@@ -85,6 +85,7 @@ let stateItems: Record<string, string> = {};
 function updateGameState(property: string, value: string) {
   stateItems[property] = value;
   console.log(chalk.cyan("UPDATING GAME STATE"), property, value);
+  console.log("stateItems", stateItems);
 }
 
 let situations = [];
@@ -162,10 +163,10 @@ let messages: Message[] = [
   {
     role: "system",
     content: `
-    ${systemPromptGameStart}
+    ${systemPromptGameStart}\n\n
     ${currentGameState}
-    ${story}
-    ${behaviour}
+    The story: ${story}\n\n
+    Your behaviour: ${behaviour}\n\n
     `,
   },
 ];
@@ -426,22 +427,46 @@ export async function runConversation(prompt: string) {
 
   messages.push({
     role: "user",
-    content: `User message: ${prompt}\n\n Prompt for this chapter: ${
-      storyline.sections[currentChapter].gptPrompt
-    } \n\n Objectives for this chapter: ${storyline.sections[
-      currentChapter
-    ].objectives.join("\n")} \n\n Comrades: ${comrades.join(
-      ", "
-    )} \n\n Characters Met: ${metCharacters
+    content: `user says: ${prompt}
+    Story context:
+    This chapter: ${storyline.sections[currentChapter].gptPrompt}
+    Objectives: ${storyline.sections[currentChapter].objectives.join(", ")}
+    Comrades: ${comrades.join(", ")}
+    Characters Met: ${metCharacters
       .map((char) => `${char.name}, ${char.role}, met at ${char.meetingPlace}`)
-      .join("\n")} \n\n Inventory Items: ${Object.entries(stateItems).join(
-      ", "
-    )} \n\n MAX 40 words reply.   ${
+      .join("\n")}
+    Inventory Items: ${Object.entries(stateItems).join(", ")}
+    MAX 45 words reply
+    ${
       storyline.sections[currentChapter]?.puzzle
-        ? `Not straight away, but as part of the narrative, introduce the puzzle: ${storyline.sections[currentChapter].puzzle}`
+        ? `Weave the puzzle into the story: ${storyline.sections[currentChapter].puzzle}`
         : ""
     }`,
   });
+
+  // messages.push({
+  //   role: "user",
+  //   content: `user says: ${prompt} \n\n
+
+  //   Story context:
+  //   \n
+  //   Prompt for this chapter: ${
+  //     storyline.sections[currentChapter].gptPrompt
+  //   } \n\n Objectives: ${storyline.sections[currentChapter].objectives.join(
+  //     "\n"
+  //   )} \n\n Comrades: ${comrades.join(
+  //     ", "
+  //   )} \n\n Characters Met: ${metCharacters
+  //     .map((char) => `${char.name}, ${char.role}, met at ${char.meetingPlace}`)
+  //     .join("\n")} \n\n Inventory Items: ${Object.entries(stateItems).join(
+  //     ", "
+  //   )} \n\n MAX 40 words reply.   ${
+  //     storyline.sections[currentChapter]?.puzzle
+  //       ? `Not straight away, but as part of the narrative, introduce the puzzle: ${storyline.sections[currentChapter].puzzle}`
+  //       : ""
+  //   }`,
+  // });
+
   console.log("...");
   const response = await openai.chat.completions.create({
     // model: "gpt-3.5-turbo-1106",
@@ -489,7 +514,7 @@ export async function runConversation(prompt: string) {
         tool_call_id: toolCall.id,
         role: "tool",
         name: functionName,
-        content: functionResponse || "Function executed successfully", // default value
+        content: functionResponse || "OK", // default value
       }); // extend conversation with function response
     }
 

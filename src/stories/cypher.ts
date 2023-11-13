@@ -24,6 +24,46 @@ let storyline = {
       gptPrompt:
         "Narrate Nova's journey through Cypher City’s shadow alleys. Describe challenges faced in hacking a security network and clues hinting at the implant's location. Maintain a suspenseful, cyberpunk atmosphere.",
       nextSectionId: 3,
+      puzzle: `Hacking Puzzle: "The Cybernetic Maze"
+      Overview:
+      Nova must navigate through a virtual labyrinth to access the mainframe of the security network. This labyrinth, known as the "Cybernetic Maze," represents the complex digital defenses of the network.
+      
+      Puzzle Mechanics:
+      Initialization:
+      Nova plugs into the network, entering a virtual environment visualized as a 3D labyrinth filled with neon lines and floating data packets.
+      The goal is to reach the central core, represented as a glowing orb.
+      
+      Code Fragments:
+      Scattered throughout the maze are code fragments that Nova must collect to build a decryption key.
+      Each fragment is guarded by security protocols (like puzzles, riddles, or digital traps).
+      
+      Security Protocols:
+      The maze has AI-controlled security sentinels that patrol and protect the fragments.
+      Nova must use stealth and hacking skills to evade or disable them.
+      
+      Decryption Key Assembly:
+      After collecting all fragments, Nova assembles them to create a decryption key.
+      The assembly requires solving a mini-puzzle where fragments must be arranged in a specific sequence based on hints gathered in the maze.
+      
+      Core Access:
+      With the decryption key, Nova approaches the core.
+      
+      A final challenge awaits: a complex algorithmic lock that requires solving a dynamic code puzzle under time pressure.
+      
+      Time Pressure:
+      The security system detects an intrusion attempt, initiating a countdown.
+      Nova must solve the algorithmic lock before time runs out to avoid being locked out and traced.
+      Interactive Elements:
+      Environmental Clues: Hints for code assembly are embedded in the maze's architecture and data streams.
+      Dynamic Obstacles: The maze shifts and changes, requiring quick adaptation and problem-solving.
+      Player Choices: Multiple pathways through the maze, each with unique challenges and rewards.
+      Narrative Integration:
+      The puzzle reflects the high-stakes, high-tech world of Cypher City.
+      Nova’s skills and decisions during the puzzle impact the narrative, like encountering hidden information about the mega-corporation or triggering unforeseen consequences.
+      Outcome:
+      Successful hacking reveals crucial information about the implant and advances the plot.
+      Failure or partial success leads to different narrative branches, like increased corporate scrutiny or alternative paths to information.
+      `,
     },
     {
       sectionId: 3,
@@ -59,16 +99,17 @@ Game state:
   Player Name: Nova
   Player Health: 100
   Player Inventory: Basic Hacker Kit
-  Starting Location: The Neon Bazaar
-  Completed Sections: None
-  Game Progress Percentage: 0%
-  Decisions Made: None
-  Puzzles: None
-  Character Interactions: None
-  Cybernetic Upgrades Found: None
-  Current Narrative Branch: None
-  Narrative Choices: None
+  
 `;
+// Starting Location: The Neon Bazaar
+//   Completed Sections: None
+//   Game Progress Percentage: 0%
+//   Decisions Made: None
+//   Puzzles: None
+//   Character Interactions: None
+//   Cybernetic Upgrades Found: None
+//   Current Narrative Branch: None
+//   Narrative Choices: None
 
 const story = `
 Title: "The Neon Chronicles of Cypher City"

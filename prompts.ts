@@ -77,7 +77,6 @@ You should always:
 - SHORT REPLIES.
 - Try NOT to repeat yourself.
 - Be creative and daring in your approach to storytelling. Keep things unexpected, interesting, exciting, fun and suspensful!
-
 `;
 
 export const story1 = `
