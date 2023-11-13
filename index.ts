@@ -1,16 +1,17 @@
 import * as readline from "readline";
 import chalk from "chalk";
-
 import { OpenAI } from "openai";
+import { makeAudio } from "./src/audio";
+
 import {
-  behaviour,
+  systemPromptGameStart,
   currentGameState,
   story,
-  story1,
-  story2,
-  systemPromptGameStart,
-} from "./prompts";
-import { makeAudio } from "./src/audio";
+  shortHistory,
+  behaviour,
+  storyline,
+  advanceStoryDefinition,
+} from "./src/stories/cypher";
 
 const apiKey = process.env.OPENAI_API_KEY;
 const openai = new OpenAI({ apiKey });
@@ -64,124 +65,6 @@ function cleanFunctionMessages(messages: Message[]): Message[] {
     return message;
   });
 }
-
-// Example dummy function hard coded to return the same weather
-// In production, this could be your backend API or an external API
-function getCurrentWeather(location, unit = "fahrenheit") {
-  if (location.toLowerCase().includes("tokyo")) {
-    return JSON.stringify({
-      location: "Tokyo",
-      temperature: "10",
-      unit: "celsius",
-    });
-  } else if (location.toLowerCase().includes("san francisco")) {
-    return JSON.stringify({
-      location: "San Francisco",
-      temperature: "72",
-      unit: "fahrenheit",
-    });
-  } else if (location.toLowerCase().includes("paris")) {
-    return JSON.stringify({
-      location: "Paris",
-      temperature: "22",
-      unit: "fahrenheit",
-    });
-  } else {
-    return JSON.stringify({ location, temperature: "unknown" });
-  }
-}
-
-function getLatitude(location) {
-  if (location.toLowerCase().includes("tokyo")) {
-    return JSON.stringify({
-      location: "Tokyo",
-      latitude: "35.6762",
-    });
-  } else if (location.toLowerCase().includes("san francisco")) {
-    return JSON.stringify({
-      location: "San Francisco",
-      latitude: "37.7749",
-    });
-  } else if (location.toLowerCase().includes("paris")) {
-    return JSON.stringify({
-      location: "Paris",
-      latitude: "48.8566",
-    });
-  } else {
-    return JSON.stringify({ location, latitude: "unknown" });
-  }
-}
-
-// let currentStory = story1;
-
-let storyline = {
-  title: "The Lost Relic of Aroria",
-  sections: [
-    {
-      sectionId: 1,
-      title: "Introduction",
-      description:
-        "The player starts their journey in the mystical world of Aroria.",
-      objectives: ["Meet Master Elara", "Receive the ancient map"],
-      prerequisites: [],
-      gptPrompt:
-        "Create an engaging and descriptive introduction to a mystical adventure in the village of Eldoria, where the player meets Master Elara and receives an ancient map. Include sensory details and an air of mystery to captivate the player's interest.",
-      nextSectionId: 2,
-    },
-    {
-      sectionId: 2,
-      title: "Forest of Whispers",
-      description:
-        "Navigate through the Forest of Whispers, solving puzzles and overcoming obstacles.",
-      objectives: [
-        "Solve the stone tablet puzzle",
-        "Learn about the history of the Relic",
-      ],
-      prerequisites: ["Received ancient map"],
-      gptPrompt:
-        "Narrate the player's journey through the enigmatic Forest of Whispers. Describe the puzzles and obstacles they face, especially focusing on a stone tablet puzzle. Do NOT give away the answer too easily! The narrative should be rich in detail, hinting at the ancient history of the Relic.",
-      puzzle: `"Narrate a puzzle-solving scenario where the player finds an ancient stone tablet in the Forest of Whispers. The tablet is adorned with mysterious runes that are key to unlocking a secret about the Relic. Guide the player through the following steps:
-
-      Discovery: Describe the tablet's discovery in a clearing, shrouded in an ethereal glow. Hint at its significance with visual and textual cues.
-      
-      Observation: Let the player examine the tablet, noting the unusual runes. Each rune represents elements like fire, water, earth, and air.
-      
-      Interaction: Present an interactive scenario where the player can align the runes in a specific order based on a riddle engraved on the tablet's edge.
-      
-      Clue Gathering: Include details in the environment, such as statues or natural formations, that correspond to the elements on the runes. A nearby stream, a flickering torch, a pile of stones, and gusts of wind can serve as clues.
-      
-      Solution: Lead the player to deduce that the runes must be aligned in the order that the elements appear in the surrounding environment: water (stream), fire (torch), earth (stones), and air (wind).
-      
-      Completion: Once aligned correctly, the tablet reveals a hidden compartment containing a fragment of a map, which is a piece of the puzzle in finding the Relic.
-      
-      In your narrative, provide clear but subtle hints, encouraging the player to think critically and connect the dots between the clues and the tablet. The tone should be mysterious and intriguing, keeping the player engaged and curious."
-      
-      This prompt is designed to guide the LLM in creating a puzzle that is challenging yet solvable, providing an engaging and satisfying experience for the player. It balances the need for critical thinking with the joy of discovery and accomplishment.`,
-      nextSectionId: 3,
-    },
-    {
-      sectionId: 3,
-      title: "The Hidden Temple",
-      description:
-        "Reach the hidden temple and face the rival adventurer, Zara.",
-      objectives: ["Confront Zara", "Make a moral decision about the Relic"],
-      prerequisites: ["Solved stone tablet puzzle"],
-      gptPrompt:
-        "Create a tense and dramatic encounter in the hidden temple with the rival adventurer, Zara. Build up to a moral decision regarding the Relic. The narrative should convey the weight of the decision and its potential impact on Aroria.",
-      nextSectionId: 4,
-    },
-    {
-      sectionId: 4,
-      title: "Resolution",
-      description: "Decide the fate of the Relic and return to Master Elara.",
-      objectives: ["Decide the fate of the Relic", "Return to Master Elara"],
-      prerequisites: ["Confronted Zara"],
-      gptPrompt:
-        "Conclude the story with the player's return to Master Elara and their decision about the Relic's fate. The narrative should reflect the consequences of their choice, ending the story on a note that resonates with the player's journey.",
-      endGame: true,
-    },
-  ],
-};
 
 const totalChapters = storyline.sections.length - 1;
 let currentChapter = 0;
@@ -437,8 +320,7 @@ const tools = [
     type: "function",
     function: {
       name: "advance_story",
-      description:
-        "when one of the objectives is achieved: read the map, solve the stone tablet puzzle, confront zara, make a moral decision about the relic, decide the fate of the Relic, return to Master Elara",
+      description: advanceStoryDefinition,
       parameters: {
         type: "object",
         properties: {
@@ -486,7 +368,7 @@ const tools = [
     function: {
       name: "recruit_comrades",
       description:
-        "characters we meet in game can be recruited to join our party of comrades and fellow adventurers. we can pay them a fee to join us. If they agree, to join us they can. But they must agree. We can pay if they negotiate.",
+        "characters we meet in game can be recruited to join our party of comrades and friends. we can pay them a fee to join us. If they agree, to join us they can. But they must agree. We can pay if they negotiate.",
       parameters: {
         type: "object",
         properties: {
@@ -544,20 +426,20 @@ export async function runConversation(prompt: string) {
 
   messages.push({
     role: "user",
-    content: `${prompt}\n\n Prompt for this chapter: ${
+    content: `User message: ${prompt}\n\n Prompt for this chapter: ${
       storyline.sections[currentChapter].gptPrompt
     } \n\n Objectives for this chapter: ${storyline.sections[
       currentChapter
     ].objectives.join("\n")} \n\n Comrades: ${comrades.join(
       ", "
     )} \n\n Characters Met: ${metCharacters
-      .join(": ")
-      .toString()} \n\n Inventory Items: ${Object.entries(stateItems).join(
+      .map((char) => `${char.name}, ${char.role}, met at ${char.meetingPlace}`)
+      .join("\n")} \n\n Inventory Items: ${Object.entries(stateItems).join(
       ", "
-    )} \n\n MAX 30 words reply.  Not straight away, but as part of the narrative, introduce the puzzle: ${
-      storyline.sections[currentChapter].puzzle
-        ? storyline.sections[currentChapter].puzzle
-        : null
+    )} \n\n MAX 40 words reply.   ${
+      storyline.sections[currentChapter]?.puzzle
+        ? `Not straight away, but as part of the narrative, introduce the puzzle: ${storyline.sections[currentChapter].puzzle}`
+        : ""
     }`,
   });
   console.log("...");
@@ -645,7 +527,7 @@ function promptUser() {
         }
         console.log(
           chalk.gray(
-            `Chapter ${currentChapter + 1}/${storyline.sections.length}: `
+            `Chapter ${currentChapter + 1}/${storyline.sections.length}:`
           ),
           storyline.sections[currentChapter].title
         );

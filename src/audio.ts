@@ -8,8 +8,9 @@ export async function makeAudio(prompt: string, openai: any) {
   const speechFile = path.resolve(`./speech-${dateString}.mp3`);
 
   const mp3 = await openai.audio.speech.create({
-    model: "tts-1-hd",
-    voice: "fable",
+    // model: "tts-1-hd",
+    model: "tts-1",
+    voice: "alloy",
     input: prompt,
   });
 
