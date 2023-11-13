@@ -2,6 +2,7 @@ import * as readline from "readline";
 import chalk from "chalk";
 import { OpenAI } from "openai";
 import { makeAudio } from "./src/audio";
+import fs from "fs";
 
 import {
   systemPromptGameStart,
@@ -436,7 +437,7 @@ export async function runConversation(prompt: string) {
       .map((char) => `${char.name}, ${char.role}, met at ${char.meetingPlace}`)
       .join("\n")}
     Inventory Items: ${Object.entries(stateItems).join(", ")}
-    MAX 45 words reply
+    MAX 60 words reply, try to keep to snappy dialogue. Only exception is for creative world building. Suck me in to the story.
     ${
       storyline.sections[currentChapter]?.puzzle
         ? `Weave the puzzle into the story: ${storyline.sections[currentChapter].puzzle}`
@@ -542,20 +543,39 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-function promptUser() {
+async function promptUser() {
   rl.question(" > ", (input) => {
     runConversation(input)
-      .then((result) => {
-        console.log(chalk.green(result?.[0]?.message?.content));
-        if (result?.[0]?.message?.content) {
-          makeAudio(result[0].message.content, openai);
+      // ...
+
+      .then(async (result) => {
+        const response = result?.[0]?.message?.content;
+        console.log(chalk.green(response));
+        let filename;
+        if (response) {
+          filename = await makeAudio(response, openai);
         }
         console.log(
           chalk.gray(
             `Chapter ${currentChapter + 1}/${storyline.sections.length}:`
           ),
-          storyline.sections[currentChapter].title
+          chalk.yellow(storyline.sections[currentChapter].title)
         );
+
+        console.log(
+          chalk.blue("input"),
+          input,
+          chalk.blue("response"),
+          response,
+          chalk.blue("filename"),
+          filename
+        );
+
+        // Write the data to a file
+        const data = `${input},"${response}",${filename}\n`;
+        fs.appendFile("conversation.log", data, (err) => {
+          if (err) throw err;
+        });
 
         promptUser(); // prompt for the next input
       })
