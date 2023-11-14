@@ -5,7 +5,7 @@ import fs from "fs";
 export async function makeAudio(prompt: string, openai: any) {
   const now = new Date();
   const dateString = now.toISOString().replace(/:/g, "-");
-  const filename = `./audio/speech-${dateString}.mp3`;
+  const filename = `./logs/audio/speech-${dateString}.mp3`;
   const speechFile = path.resolve(filename);
 
   const mp3 = await openai.audio.speech.create({

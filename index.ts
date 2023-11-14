@@ -17,6 +17,12 @@ import {
 const apiKey = process.env.OPENAI_API_KEY;
 const openai = new OpenAI({ apiKey });
 
+const now = new Date();
+const startupTimestamp = now
+  .toISOString()
+  .replace(/:/g, "-")
+  .replace(/\..+/, "");
+
 const rainbowText = (str: string) => {
   const colors = ["red", "yellow", "green", "blue", "magenta", "cyan"];
   let rainbow = "";
@@ -569,27 +575,23 @@ async function promptUser() {
           chalk.yellow(storyline.sections[currentChapter].title)
         );
 
-        console.log(
-          chalk.blue("input"),
-          input,
-          chalk.blue("response"),
-          response,
-          chalk.blue("filename"),
-          filename
-        );
+        // console.log(
+        //   chalk.blue("input"),
+        //   input,
+        //   chalk.blue("response"),
+        //   response,
+        //   chalk.blue("filename"),
+        //   filename
+        // );
 
         // Add the message to the array
         logMessages.push({ input, response, filename });
 
         // Write the data to a file
         const data = JSON.stringify(logMessages);
-        const now = new Date();
-        const timestamp = now
-          .toISOString()
-          .replace(/:/g, "-")
-          .replace(/\..+/, "");
+
         fs.writeFile(
-          `./logs/conversation-log-${timestamp}.json`,
+          `./logs/conversation-log-${startupTimestamp}.json`,
           data,
           (err) => {
             if (err) throw err;
