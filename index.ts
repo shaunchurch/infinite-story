@@ -36,6 +36,14 @@ interface Message {
   tool_calls?: any[];
 }
 
+interface LogMessage {
+  input: string;
+  response: string;
+  filename?: string;
+}
+
+const logMessages: Message[] = [];
+
 function cleanMessages(messages: Message[]): Message[] {
   return messages.map((message) => {
     if (!message?.content) return message;
@@ -86,7 +94,7 @@ let stateItems: Record<string, string> = {};
 function updateGameState(property: string, value: string) {
   stateItems[property] = value;
   console.log(chalk.cyan("UPDATING GAME STATE"), property, value);
-  console.log("stateItems", stateItems);
+  // console.log("stateItems", stateItems);
 }
 
 let situations = [];
@@ -546,8 +554,7 @@ const rl = readline.createInterface({
 async function promptUser() {
   rl.question(" > ", (input) => {
     runConversation(input)
-      // ...
-
+      // Replace the existing code block with this
       .then(async (result) => {
         const response = result?.[0]?.message?.content;
         console.log(chalk.green(response));
@@ -571,9 +578,17 @@ async function promptUser() {
           filename
         );
 
+        // Add the message to the array
+        logMessages.push({ input, response, filename });
+
         // Write the data to a file
-        const data = `${input},"${response}",${filename}\n`;
-        fs.appendFile("conversation.log", data, (err) => {
+        const data = JSON.stringify(logMessages);
+        const now = new Date();
+        const timestamp = now
+          .toISOString()
+          .replace(/:/g, "-")
+          .replace(/\..+/, "");
+        fs.writeFile(`conversation-log-${timestamp}.json`, data, (err) => {
           if (err) throw err;
         });
 
