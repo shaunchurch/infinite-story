@@ -588,9 +588,13 @@ async function promptUser() {
           .toISOString()
           .replace(/:/g, "-")
           .replace(/\..+/, "");
-        fs.writeFile(`conversation-log-${timestamp}.json`, data, (err) => {
-          if (err) throw err;
-        });
+        fs.writeFile(
+          `./logs/conversation-log-${timestamp}.json`,
+          data,
+          (err) => {
+            if (err) throw err;
+          }
+        );
 
         promptUser(); // prompt for the next input
       })
