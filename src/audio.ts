@@ -12,6 +12,7 @@ export async function makeAudio(prompt: string, openai: any) {
     // model: "tts-1-hd",
     model: "tts-1",
     voice: "alloy",
+    // voice: "fable",
     input: prompt,
   });
 

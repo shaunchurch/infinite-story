@@ -12,6 +12,7 @@ import {
   behaviour,
   storyline,
   advanceStoryDefinition,
+  // } from "./src/stories/aroria";
 } from "./src/stories/cypher";
 
 const apiKey = process.env.OPENAI_API_KEY;
@@ -58,7 +59,10 @@ function cleanMessages(messages: Message[]): Message[] {
     if (promptIndex !== -1) {
       return {
         ...message,
-        content: message.content.slice(0, promptIndex).trim(),
+        content: message.content
+          .slice(0, promptIndex)
+          .trim()
+          .replace("user says:", ""),
       };
     }
     // console.log("promptIndex", promptIndex);
@@ -187,41 +191,6 @@ let messages: Message[] = [
 ];
 
 const tools = [
-  // {
-  //   type: "function",
-  //   function: {
-  //     name: "get_current_weather",
-  //     description: "Get the current weather in a given location",
-  //     parameters: {
-  //       type: "object",
-  //       properties: {
-  //         location: {
-  //           type: "string",
-  //           description: "The city and state, e.g. San Francisco, CA",
-  //         },
-  //         unit: { type: "string", enum: ["celsius", "fahrenheit"] },
-  //       },
-  //       required: ["location"],
-  //     },
-  //   },
-  // },
-  // {
-  //   type: "function",
-  //   function: {
-  //     name: "get_latitude",
-  //     description: "Get the latitude of a given location",
-  //     parameters: {
-  //       type: "object",
-  //       properties: {
-  //         location: {
-  //           type: "string",
-  //           description: "The city and state, e.g. San Francisco, CA",
-  //         },
-  //       },
-  //       required: ["location"],
-  //     },
-  //   },
-  // },
   {
     type: "function",
     function: {
@@ -271,7 +240,7 @@ const tools = [
     function: {
       name: "solve_query",
       description:
-        "To solve the quest the player must retrieve the item and solve the riddle correctly. The answer is sausages.",
+        "To solve the quest the player must hack the network and get the implant location.",
       parameters: {
         type: "object",
         properties: {
@@ -293,7 +262,7 @@ const tools = [
     function: {
       name: "update_game_state",
       description:
-        "Edit the game state when any new information in game state is learned about the player",
+        "Edit the game state when any new information is learned about the player character",
       parameters: {
         type: "object",
         properties: {
@@ -445,13 +414,17 @@ export async function runConversation(prompt: string) {
     content: `user says: ${prompt}
     Story context:
     This chapter: ${storyline.sections[currentChapter].gptPrompt}
-    Objectives: ${storyline.sections[currentChapter].objectives.join(", ")}
+    
     Comrades: ${comrades.join(", ")}
-    Characters Met: ${metCharacters
+    Characters: ${metCharacters
       .map((char) => `${char.name}, ${char.role}, met at ${char.meetingPlace}`)
       .join("\n")}
-    Inventory Items: ${Object.entries(stateItems).join(", ")}
-    MAX 60 words reply, try to keep to snappy dialogue. Only exception is for creative world building. Suck me in to the story.
+    Inventory: ${Object.entries(stateItems).join(", ")}
+    Objectives: ${storyline.sections[currentChapter].objectives.join(", ")}
+
+    - MAX 60 words reply, try to keep to snappy dialogue. Only exception is for creative world building. Suck me in to the story.
+    - ALWAYS TRY TO ENGAGE THE USER to make the story more interesting, keep the story moving forward.
+    
     ${
       storyline.sections[currentChapter]?.puzzle
         ? `Weave the puzzle into the story: ${storyline.sections[currentChapter].puzzle}`
@@ -485,7 +458,8 @@ export async function runConversation(prompt: string) {
   console.log("...");
   const response = await openai.chat.completions.create({
     // model: "gpt-3.5-turbo-1106",
-    model: "gpt-4-1106-preview",
+    // model: "gpt-4-1106-preview",
+    model: "gpt-4o",
     messages: messages,
     tools: tools,
     tool_choice: "auto", // auto is default, but we'll be explicit
@@ -498,11 +472,7 @@ export async function runConversation(prompt: string) {
   const toolCalls = responseMessage.tool_calls;
   if (responseMessage.tool_calls) {
     // Step 3: call the function
-    // Note: the JSON response may not always be valid; be sure to handle errors
-
     const availableFunctions = {
-      // get_current_weather: getCurrentWeather,
-      // get_latitude: getLatitude,
       make_choice: makeChoice,
       save_preference: savePreference,
       solve_query: solveQuery,
@@ -512,7 +482,7 @@ export async function runConversation(prompt: string) {
       meet_character: meetCharacter,
       end_game: endGame,
       recruit_comrades: recruitComrades,
-    }; // two functions in this example, but you can have multiple
+    };
 
     messages.push(responseMessage); // extend conversation with assistant's reply
 
@@ -522,7 +492,6 @@ export async function runConversation(prompt: string) {
       const functionName = toolCall.function.name;
       const functionToCall = availableFunctions[functionName];
       const functionArgs = JSON.parse(toolCall.function.arguments);
-
       const functionResponse = functionToCall(...Object.values(functionArgs));
 
       messages.push({
@@ -535,7 +504,8 @@ export async function runConversation(prompt: string) {
 
     const secondResponse = await openai.chat.completions.create({
       // model: "gpt-3.5-turbo-1106",
-      model: "gpt-4-1106-preview",
+      // model: "gpt-4-1106-preview",
+      model: "gpt-4o",
       messages: messages,
     }); // get a new response from the model where it can see the function response
 
@@ -569,10 +539,12 @@ async function promptUser() {
           filename = await makeAudio(response, openai);
         }
         console.log(
-          chalk.gray(
+          chalk.white(
             `Chapter ${currentChapter + 1}/${storyline.sections.length}:`
           ),
           chalk.yellow(storyline.sections[currentChapter].title)
+          // chalk.gray("History"),
+          // messages.length
         );
 
         // console.log(
@@ -588,11 +560,20 @@ async function promptUser() {
         logMessages.push({ input, response, filename });
 
         // Write the data to a file
-        const data = JSON.stringify(logMessages);
+        const logMessagesData = JSON.stringify(logMessages);
+        const messagesData = JSON.stringify(messages);
 
         fs.writeFile(
           `./logs/conversation-log-${startupTimestamp}.json`,
-          data,
+          logMessagesData,
+          (err) => {
+            if (err) throw err;
+          }
+        );
+
+        fs.writeFile(
+          `./logs/prompt-log-${startupTimestamp}.json`,
+          messagesData,
           (err) => {
             if (err) throw err;
           }
@@ -617,5 +598,3 @@ process.stdin.on("keypress", (key) => {
     console.log(messages);
   }
 });
-
-// rest of the code
